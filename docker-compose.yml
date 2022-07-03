@@ -1,0 +1,44 @@
+services:
+
+  postgres:
+    restart: always
+    image: postgres:latest
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bet-maker:
+    build:
+      context: ./bet-maker
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: ./bet-maker
+        target: /testapp/bet-maker
+    ports:
+      - 8000:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  line-provider:
+    build:
+      context: ./line-provider
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: ./line-provider
+        target: /testapp/line-provider
+    ports:
+      - 8001:8000
+
+
+volumes:
+  pgdata:
